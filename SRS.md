@@ -137,22 +137,7 @@ Các nội dung này cần **BA làm rõ với stakeholder** trước khi Develo
 **Phạm vi tổng quát:** CAB System quản lý quy trình **Customer đặt xe → tìm Driver → thực hiện Trip → tính cước → Payment → Notification → Rating**, đồng thời hỗ trợ quản trị và báo cáo cho doanh nghiệp.
 
 ## Bước 5: Chuyển đổi business requirement
-Từ Business Requirement của khách hàng, có thể chuyển thành các System/Functional Requirements chính như sau:
-| ID       | Business Requirement                                | System Requirement                                                                              |
-| -------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| **BR01** | Khách hàng cần sử dụng dịch vụ đặt xe               | Hệ thống cho phép Customer đăng ký, đăng nhập và quản lý thông tin cá nhân                      |
-| **BR02** | Khách hàng cần đặt xe thuận tiện                    | Hệ thống cho phép nhập điểm đón, điểm đến, chọn loại xe và tạo Booking                          |
-| **BR03** | Cần giảm việc phân công tài xế thủ công             | Hệ thống tự động tìm Driver dựa trên vị trí, trạng thái sẵn sàng và tiêu chí vận hành           |
-| **BR04** | Khách hàng cần biết tình trạng chuyến               | Hệ thống cho phép Customer theo dõi Driver, ETA và Trip Status                                  |
-| **BR05** | Tài xế cần quản lý và thực hiện chuyến              | Driver có thể Accept/Reject Booking và cập nhật trạng thái chuyến                               |
-| **BR06** | Doanh nghiệp cần quản lý cước và thanh toán         | Hệ thống tính Fare và hỗ trợ Cash/Electronic Payment                                            |
-| **BR07** | Người dùng cần được cập nhật thông tin              | Hệ thống gửi Notification khi có các sự kiện quan trọng của chuyến                              |
-| **BR08** | Doanh nghiệp cần quản lý hoạt động tập trung        | Admin quản lý Customer, Driver, Vehicle, Trip và Transaction                                    |
-| **BR09** | Ban lãnh đạo cần theo dõi hoạt động                 | Hệ thống cung cấp báo cáo về Trip, Revenue, Cancellation và Driver Performance                  |
-| **BR10** | Hệ thống phải phục vụ nhu cầu tăng cao              | Các thành phần cần có khả năng **scale độc lập**                                                |
-| **BR11** | Một chức năng lỗi không được làm dừng toàn hệ thống | Payment/Notification failure cần được cô lập khỏi quy trình đặt xe chính                        |
-| **BR12** | Dữ liệu và chức năng nhạy cảm cần được bảo vệ       | Hệ thống phải có Authentication, Authorization, Data Protection và Audit Log                    |
-| **BR13** | Nền tảng phải phát triển được lâu dài               | Hệ thống cho phép bổ sung Service Type, Payment Method và Notification Provider trong tương lai |
+
 
 | **Business Goal**                         | **Business Requirement**                                                                                     | **Mục đích/giá trị**                                        |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
@@ -167,4 +152,50 @@ Từ Business Requirement của khách hàng, có thể chuyển thành các Sys
 | **BG6 – Ổn định và bảo mật**              | **BR09:** Hệ thống xác thực, phân quyền và bảo vệ dữ liệu người dùng.                                        | Đảm bảo an toàn và bảo mật thông tin.                       ||
 **BG7 – Khả năng mở rộng**                | **BR10:** Hệ thống cho phép tích hợp thêm dịch vụ, phương thức thanh toán và kênh thông báo.                 | Giúp hệ thống dễ phát triển trong tương lai.                |
 | **BG8 – Hỗ trợ ra quyết định**            | **BR11:** Hệ thống cung cấp báo cáo về số chuyến, doanh thu, tỷ lệ hoàn thành, tỷ lệ hủy và hiệu quả tài xế. | Giúp ban lãnh đạo theo dõi và ra quyết định.                |
+
+## Bước 6: Business process
+| Bước   | Business Process    | Mô tả                                                                           |
+| ------ | ------------------- | ------------------------------------------------------------------------------- |
+| **1**  | **Create Booking**  | Customer nhập điểm đón, điểm đến, loại xe và gửi yêu cầu                        |
+| **2**  | **Find Driver**     | Hệ thống tìm Driver phù hợp dựa trên vị trí và trạng thái sẵn sàng              |
+| **3**  | **Accept/Reject**   | Driver nhận thông báo và Accept hoặc Reject chuyến                              |
+| **4**  | **Assign Driver**   | Driver chấp nhận → hệ thống phân công; từ chối/không phản hồi → tìm Driver khác |
+| **5**  | **Pickup Customer** | Driver đến điểm đón và cập nhật trạng thái                                      |
+| **6**  | **Execute Trip**    | Driver đón khách và thực hiện chuyến đi                                         |
+| **7**  | **Complete Trip**   | Driver cập nhật chuyến đã hoàn thành                                            |
+| **8**  | **Calculate Fare**  | Hệ thống tính số tiền Customer phải trả                                         |
+| **9**  | **Payment**         | Customer thanh toán bằng Cash hoặc Electronic Payment                           |
+| **10** | **Rating**          | Customer đánh giá Driver sau chuyến                                             |
+| **11** | **Record & Report** | Hệ thống lưu lịch sử và cung cấp dữ liệu phục vụ quản lý/báo cáo                |
+
+Dùng công cụ mermaid vẽ sơ đồ 
+
+## Bước 7: Phân rã yêu cầu chức năng
+| Mã       | Yêu cầu chức năng                                              |
+| -------- | -------------------------------------------------------------- |
+| **FR01** | Kiểm tra tài xế đang sẵn sàng nhận chuyến                      |
+| **FR02** | Tìm tài xế phù hợp và gần điểm đón                             |
+| **FR03** | Gửi yêu cầu nhận chuyến cho tài xế                             |
+| **FR04** | Cho phép tài xế chấp nhận hoặc từ chối chuyến                  |
+| **FR05** | Tự động tìm tài xế khác khi tài xế từ chối hoặc không phản hồi |
+| **FR06** | Thông báo cho khách hàng khi tài xế được phân công             |
+| **FR07** | Theo dõi vị trí hiện tại của tài xế                            |
+| **FR08** | Theo dõi trạng thái chuyến đi                                  |
+| **FR09** | Cho phép tài xế cập nhật trạng thái chuyến                     |
+| **FR10** | Tính cước chuyến đi                                            |
+| **FR11** | Hỗ trợ thanh toán tiền mặt                                     |
+| **FR12** | Hỗ trợ thanh toán điện tử                                      |
+| **FR13** | Xử lý và thông báo khi thanh toán thất bại                     |
+| **FR14** | Gửi thông báo cho khách hàng và tài xế                         |
+| **FR15** | Lưu và xem lịch sử chuyến đi                                   |
+| **FR16** | Cho phép khách hàng đánh giá tài xế                            |
+| **FR17** | Quản lý thông tin khách hàng                                   |
+| **FR18** | Quản lý thông tin tài xế                                       |
+| **FR19** | Quản lý thông tin phương tiện                                  |
+| **FR20** | Quản lý và theo dõi các chuyến đi                              |
+| **FR21** | Tra cứu lịch sử giao dịch                                      |
+| **FR22** | Xử lý các chuyến đi bị lỗi                                     |
+| **FR23** | Phân quyền người sử dụng hệ thống                              |
+| **FR24** | Ghi nhận nhật ký các thao tác quan trọng                       |
+| **FR25** | Cung cấp báo cáo và thống kê hoạt động                         |
 
