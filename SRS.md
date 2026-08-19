@@ -466,3 +466,6 @@ Dựa trên các Use Case và yêu cầu của CAB System, có thể xác địn
 | **BG04** Quản lý vận hành      | Quản trị hệ thống          | Administration         | **UC08** Quản lý hệ thống        | **AC13** Kiểm soát quyền thao tác                           |
 | **BG05** Theo dõi kinh doanh   | Cung cấp báo cáo           | Reporting              | View Reports                     | **AC14** Xem được các báo cáo yêu cầu                       |
 | **BG04** Kiểm soát hoạt động   | Lưu vết thao tác           | Audit Logging          | Audit                            | **AC15** Thao tác quan trọng được lưu vết                   |
+
+
+hello
