@@ -84,7 +84,7 @@ LOW INTEREST ───────────────┼──────�
 | **Driver**                | 🟠 Trung bình     | Người trực tiếp tham gia Driver Matching và Trip                   |
 | **Notification Provider** | 🟡 Trung bình     | Ảnh hưởng đến Notification nhưng không quyết định toàn bộ hệ thống |
 
-## Bước 3: Tìm Business Goal
+## Bước 3: Xác định Business Goal
 
 
 Dựa trên yêu cầu của khách hàng, các **Business Goal** chính của CAB System là: 
@@ -99,4 +99,58 @@ Dựa trên yêu cầu của khách hàng, các **Business Goal** chính của C
 | **BG06 – Đảm bảo khả năng mở rộng**             | Phục vụ số lượng lớn người dùng và cho phép mở rộng từng thành phần khi tải tăng   |
 | **BG07 – Hỗ trợ phát triển lâu dài**            | Dễ bổ sung loại dịch vụ, phương thức thanh toán, kênh thông báo và tính năng mới   |
 
- 
+ ## Bước 4: Xác định phạm vi hệ thống
+
+Dựa trên yêu cầu khách hàng, phạm vi của **CAB System** có thể chia thành **In Scope** và **Out of Scope**. 
+
+### In Scope
+
+| Phạm vi                         | Nội dung                                                                     |
+| ------------------------------- | ---------------------------------------------------------------------------- |
+| **Account Management**          | Đăng ký, đăng nhập, cập nhật thông tin Customer/Driver                       |
+| **Booking Management**          | Tạo yêu cầu đặt xe, chọn điểm đón, điểm đến và loại xe                       |
+| **Driver & Vehicle Management** | Quản lý tài xế, phương tiện, trạng thái hoạt động và vị trí                  |
+| **Driver Matching**             | Tìm, đề xuất và phân công tài xế phù hợp                                     |
+| **Trip Management**             | Theo dõi và cập nhật trạng thái chuyến đi                                    |
+| **Fare Management**             | Tính số tiền cần thanh toán sau chuyến                                       |
+| **Payment**                     | Hỗ trợ tiền mặt và tích hợp thanh toán điện tử                               |
+| **Notification**                | Thông báo các sự kiện của chuyến cho Customer/Driver                         |
+| **Rating**                      | Customer đánh giá Driver sau chuyến                                          |
+| **Administration**              | Quản lý Customer, Driver, Vehicle, Trip và Transaction                       |
+| **Reporting**                   | Báo cáo chuyến đi, doanh thu, tỷ lệ hoàn thành/hủy, hiệu quả Driver          |
+| **Security & Audit**            | Authentication, Authorization, bảo vệ dữ liệu và lưu vết thao tác quan trọng |
+
+### Out of Scope / Chưa được xác định
+
+Tài liệu **không xác định chi tiết** các nội dung sau nên chưa thể đưa vào phạm vi triển khai cụ thể:
+
+* Công thức tính cước chi tiết.
+* Thuật toán/tiêu chí ưu tiên Driver cụ thể.
+* Thời gian Driver phải phản hồi.
+* Chính sách hủy chuyến.
+* Xử lý chi tiết khi mất kết nối mạng.
+* Thời gian lưu trữ dữ liệu.
+* Nhà cung cấp Payment/Notification cụ thể.
+
+Các nội dung này cần **BA làm rõ với stakeholder** trước khi Development Team triển khai. 
+
+**Phạm vi tổng quát:** CAB System quản lý quy trình **Customer đặt xe → tìm Driver → thực hiện Trip → tính cước → Payment → Notification → Rating**, đồng thời hỗ trợ quản trị và báo cáo cho doanh nghiệp.
+
+## Bước 5: Chuyển đổi business requirement
+Từ Business Requirement của khách hàng, có thể chuyển thành các System/Functional Requirements chính như sau:
+| ID       | Business Requirement                                | System Requirement                                                                              |
+| -------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **BR01** | Khách hàng cần sử dụng dịch vụ đặt xe               | Hệ thống cho phép Customer đăng ký, đăng nhập và quản lý thông tin cá nhân                      |
+| **BR02** | Khách hàng cần đặt xe thuận tiện                    | Hệ thống cho phép nhập điểm đón, điểm đến, chọn loại xe và tạo Booking                          |
+| **BR03** | Cần giảm việc phân công tài xế thủ công             | Hệ thống tự động tìm Driver dựa trên vị trí, trạng thái sẵn sàng và tiêu chí vận hành           |
+| **BR04** | Khách hàng cần biết tình trạng chuyến               | Hệ thống cho phép Customer theo dõi Driver, ETA và Trip Status                                  |
+| **BR05** | Tài xế cần quản lý và thực hiện chuyến              | Driver có thể Accept/Reject Booking và cập nhật trạng thái chuyến                               |
+| **BR06** | Doanh nghiệp cần quản lý cước và thanh toán         | Hệ thống tính Fare và hỗ trợ Cash/Electronic Payment                                            |
+| **BR07** | Người dùng cần được cập nhật thông tin              | Hệ thống gửi Notification khi có các sự kiện quan trọng của chuyến                              |
+| **BR08** | Doanh nghiệp cần quản lý hoạt động tập trung        | Admin quản lý Customer, Driver, Vehicle, Trip và Transaction                                    |
+| **BR09** | Ban lãnh đạo cần theo dõi hoạt động                 | Hệ thống cung cấp báo cáo về Trip, Revenue, Cancellation và Driver Performance                  |
+| **BR10** | Hệ thống phải phục vụ nhu cầu tăng cao              | Các thành phần cần có khả năng **scale độc lập**                                                |
+| **BR11** | Một chức năng lỗi không được làm dừng toàn hệ thống | Payment/Notification failure cần được cô lập khỏi quy trình đặt xe chính                        |
+| **BR12** | Dữ liệu và chức năng nhạy cảm cần được bảo vệ       | Hệ thống phải có Authentication, Authorization, Data Protection và Audit Log                    |
+| **BR13** | Nền tảng phải phát triển được lâu dài               | Hệ thống cho phép bổ sung Service Type, Payment Method và Notification Provider trong tương lai |
+
