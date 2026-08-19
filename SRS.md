@@ -1,4 +1,4 @@
-Bước 1: đọc và phân tích yêu cầu: hiểuu về bussiness contesxt và bussiness problem
+Bước 1: đọc và phân tích yêu cầu: hiểu về business context và business problem
 trả lời câu hỏi: khách hàng muốn giải quyết vấn đề gì
 vì sao không thể đáp ứng, ai sử dụng hệ thống này,
 giá trị sau khi tạo ra
