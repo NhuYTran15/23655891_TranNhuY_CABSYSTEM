@@ -199,3 +199,99 @@ Dùng công cụ mermaid vẽ sơ đồ
 | **FR24** | Ghi nhận nhật ký các thao tác quan trọng                       |
 | **FR25** | Cung cấp báo cáo và thống kê hoạt động                         |
 
+## Bước 8: Những quy tắc nghiệp vụ và ngoại lệ
+### 1. Business Rules
+
+| ID       | Quy tắc nghiệp vụ                                                                       |
+| -------- | --------------------------------------------------------------------------------------- |
+| **BR01** | Customer và Driver phải được xác thực trước khi sử dụng các chức năng yêu cầu tài khoản |
+| **BR02** | Chỉ Driver đang ở trạng thái sẵn sàng mới được xét nhận chuyến                          |
+| **BR03** | Driver Matching phải dựa trên vị trí, trạng thái sẵn sàng và các tiêu chí vận hành khác |
+| **BR04** | Nếu Driver từ chối hoặc không phản hồi, hệ thống phải tự động tìm Driver khác           |
+| **BR05** | Customer không cần tạo lại Booking khi Driver đầu tiên không nhận chuyến                |
+| **BR06** | Fare được tính dựa trên loại dịch vụ và thông tin chuyến đi                             |
+| **BR07** | Electronic Payment phải được xử lý thông qua Payment Provider bên ngoài                 |
+| **BR08** | CAB System không lưu trực tiếp thông tin nhạy cảm của thẻ hoặc tài khoản thanh toán     |
+| **BR09** | Customer chỉ có thể đánh giá Driver sau khi chuyến đi hoàn thành                        |
+| **BR10** | Các chức năng quản trị nhạy cảm phải được kiểm soát quyền truy cập                      |
+| **BR11** | Các thao tác quan trọng phải được lưu Audit Log                                         |
+
+### 2. Business Exceptions
+
+| Ngoại lệ                         | Cách xử lý                                                            |
+| -------------------------------- | --------------------------------------------------------------------- |
+| **Driver từ chối chuyến**        | Tiếp tục tìm Driver khác                                              |
+| **Driver không phản hồi**        | Chuyển sang Driver khác                                               |
+| **Không tìm được Driver**        | Thông báo rõ ràng cho Customer                                        |
+| **Electronic Payment thất bại**  | Thông báo Customer và cho phép xử lý lại theo chính sách doanh nghiệp |
+| **Payment Service gặp lỗi**      | Không được làm toàn bộ hệ thống đặt xe ngừng hoạt động                |
+| **Notification Service gặp lỗi** | Không được làm ảnh hưởng toàn bộ quá trình Booking                    |
+
+## Bước 9: Mô hình hoá dữ liệu
+
+Dựa trên yêu cầu hiện tại, các **Business Entity** chính của CAB System có thể xác định như sau. 
+
+| Entity           | Dữ liệu chính                                                           |
+| ---------------- | ----------------------------------------------------------------------- |
+| **Customer**     | CustomerID, Name, Phone, Email, Profile                                 |
+| **Driver**       | DriverID, Name, Phone, Status, CurrentLocation                          |
+| **Vehicle**      | VehicleID, DriverID, VehicleType, PlateNumber, VehicleInfo              |
+| **Booking**      | BookingID, CustomerID, PickupLocation, Destination, ServiceType, Status |
+| **Trip**         | TripID, BookingID, DriverID, StartTime, EndTime, TripStatus             |
+| **Location**     | LocationID, DriverID, Latitude, Longitude, Timestamp                    |
+| **Fare**         | FareID, TripID, Amount, ServiceType                                     |
+| **Payment**      | PaymentID, TripID, Method, Amount, PaymentStatus                        |
+| **Rating**       | RatingID, TripID, CustomerID, DriverID, Score, Comment                  |
+| **Notification** | NotificationID, UserID, Type, Content, Status                           |
+| **Transaction**  | TransactionID, PaymentID, Amount, Status, CreatedAt                     |
+| **AuditLog**     | LogID, UserID, Action, Timestamp                                        |
+
+### Quan hệ dữ liệu chính
+
+```text
+Customer
+   │
+   └── creates ──> Booking
+                     │
+                     └── generates ──> Trip
+                                        │
+Driver ───────────────┘                 │
+   │                                    ├── Fare
+   ├── Vehicle                          ├── Payment
+   └── Location                         └── Rating
+
+Payment ──> Transaction
+
+Customer / Driver
+       │
+       └── Notification
+
+User/Admin
+       │
+       └── AuditLog
+```
+
+### Cardinality cơ bản
+
+* Một **Customer** có thể tạo nhiều **Booking**.
+* Một **Booking** tương ứng với một chuyến được thực hiện sau khi tìm được Driver.
+* Một **Driver** có thể thực hiện nhiều **Trip** theo thời gian.
+* Một **Driver** có phương tiện và nhiều bản ghi **Location**.
+* Một **Trip** có thông tin **Fare** và **Payment**.
+* Một **Trip hoàn thành** có thể có **Rating** từ Customer.
+* Một **Payment** có thể phát sinh dữ liệu **Transaction**.
+## Bước 10: Xác định yêu cầu không phải chức năng
+
+| Nhóm NFR                       | Yêu cầu                                                                                       |
+| ------------------------------ | --------------------------------------------------------------------------------------------- |
+| **Performance & Scalability**  | Hệ thống phải hoạt động ổn định khi nhu cầu tăng cao và các thành phần có thể scale độc lập   |
+| **Availability & Reliability** | Lỗi ở Payment hoặc Notification không được làm toàn bộ hệ thống đặt xe ngừng hoạt động        |
+| **Maintainability**            | Có thể triển khai hoặc thay đổi từng phần mà hạn chế ảnh hưởng đến chức năng đang chạy        |
+| **Extensibility**              | Dễ bổ sung Service Type, Payment Method, Payment Provider, Notification Provider              |
+| **Security**                   | Customer và Driver phải được Authentication trước khi dùng chức năng yêu cầu tài khoản        |
+| **Authorization**              | Các thao tác Admin nhạy cảm phải được phân quyền                                              |
+| **Data Protection**            | Bảo vệ thông tin cá nhân, phương tiện, vị trí và giao dịch                                    |
+| **Auditability**               | Lưu vết các thao tác quan trọng để kiểm tra khi có sự cố                                      |
+| **Integration**                | Hỗ trợ tích hợp Payment Provider bên ngoài mà không lưu trực tiếp dữ liệu thanh toán nhạy cảm |
+| **Deployability**              | Cho phép triển khai chức năng mới từng phần, giảm ảnh hưởng đến toàn hệ thống                 |
+
