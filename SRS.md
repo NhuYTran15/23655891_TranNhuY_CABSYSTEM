@@ -295,87 +295,174 @@ User/Admin
 | **Integration**                | Hỗ trợ tích hợp Payment Provider bên ngoài mà không lưu trực tiếp dữ liệu thanh toán nhạy cảm |
 | **Deployability**              | Cho phép triển khai chức năng mới từng phần, giảm ảnh hưởng đến toàn hệ thống                 |
 ## Bước 11: Tiến hành thiết kế các use case(UC)
+
+```mermaid
 flowchart LR
-    %% Actors
-    Customer[👤 Customer]
-    Driver[🚗 Driver]
-    Admin[👤 Operation Staff / Admin]
-    PaymentProvider[💳 Payment Provider]
-    NotificationProvider[🔔 Notification Provider]
+    %% Định nghĩa Tác nhân (Actors)
+    CUS(Khách hàng)
+    DRV(Tài xế)
+    ADM(Nhân viên vận hành)
+    PAY{{Cổng thanh toán}}
 
-    %% CAB System
-    subgraph CAB["CAB SYSTEM"]
-
-        UC1((Register / Login))
-        UC2((Manage Profile))
-
-        UC3((Create Booking))
-        UC4((Driver Matching))
-        UC5((Track Trip))
-        UC6((View Trip History))
-        UC7((Payment))
-        UC8((Rate Driver))
-
-        UC9((Manage Vehicle))
-        UC10((Update Availability))
-        UC11((Update Location))
-        UC12((Receive Trip Request))
-        UC13((Accept / Reject Trip))
-        UC14((Update Trip Status))
-        UC15((Complete Trip))
-
-        UC16((Calculate Fare))
-        UC17((Send Notification))
-
-        UC18((Manage Customer))
-        UC19((Manage Driver))
-        UC20((Manage Vehicle))
-        UC21((Manage Trip))
-        UC22((Manage Transaction))
-        UC23((Handle Trip Issues))
-        UC24((Manage Permissions))
-        UC25((View Reports))
+    %% Ranh giới hệ thống (System Boundary)
+    subgraph Hệ thống CAB
+        direction TB
+        UC1([Đăng nhập / Đăng ký])
+        UC2([Đặt xe])
+        UC3([Theo dõi chuyến đi])
+        UC4([Thanh toán cước phí])
+        UC5([Đánh giá tài xế])
+        
+        UC6([Bật/Tắt sẵn sàng])
+        UC7([Chấp nhận/Từ chối chuyến])
+        UC8([Cập nhật trạng thái chuyến])
+        
+        UC9([Quản lý User & Phương tiện])
+        UC10([Giám sát chuyến đi lỗi])
+        UC11([Xem báo cáo thống kê])
     end
 
-    %% Customer
-    Customer --> UC1
-    Customer --> UC2
-    Customer --> UC3
-    Customer --> UC5
-    Customer --> UC6
-    Customer --> UC7
-    Customer --> UC8
+    %% Tương tác của Khách hàng
+    CUS --- UC1
+    CUS --- UC2
+    CUS --- UC3
+    CUS --- UC4
+    CUS --- UC5
 
-    %% Driver
-    Driver --> UC1
-    Driver --> UC2
-    Driver --> UC9
-    Driver --> UC10
-    Driver --> UC11
-    Driver --> UC12
-    Driver --> UC13
-    Driver --> UC14
-    Driver --> UC15
+    %% Tương tác của Tài xế
+    DRV --- UC1
+    DRV --- UC6
+    DRV --- UC7
+    DRV --- UC8
 
-    %% Admin
-    Admin --> UC18
-    Admin --> UC19
-    Admin --> UC20
-    Admin --> UC21
-    Admin --> UC22
-    Admin --> UC23
-    Admin --> UC24
-    Admin --> UC25
+    %% Tương tác của Admin
+    ADM --- UC9
+    ADM --- UC10
+    ADM --- UC11
 
-    %% Relationships
-    UC3 -. "<<include>>" .-> UC4
-    UC15 -. "<<include>>" .-> UC16
-    UC7 --> PaymentProvider
+    %% Tương tác với Hệ thống bên ngoài
+    UC4 -.->|<<include>>| PAY
+```
+## Bước 12: Đặc tả use case 
 
-    UC3 -.-> UC17
-    UC4 -.-> UC17
-    UC14 -.-> UC17
-    UC15 -.-> UC17
-    UC7 -.-> UC17
 
-    UC17 --> NotificationProvider
+### UC01 – Đăng nhập
+
+| Thuộc tính        | Nội dung                                                                   |
+| ----------------- | -------------------------------------------------------------------------- |
+| **Actor**         | Customer, Driver, Admin                                                    |
+| **Precondition**  | Người dùng đã có tài khoản                                                 |
+| **Main Flow**     | 1. Nhập thông tin đăng nhập. 2. Hệ thống xác thực. 3. Đăng nhập thành công |
+| **Exception**     | Sai thông tin đăng nhập → thông báo lỗi                                    |
+| **Postcondition** | Người dùng được truy cập các chức năng theo quyền                          |
+
+### UC02 – Tạo Booking
+
+| Thuộc tính        | Nội dung                                                                                           |
+| ----------------- | -------------------------------------------------------------------------------------------------- |
+| **Actor**         | Customer                                                                                           |
+| **Precondition**  | Customer đã đăng nhập                                                                              |
+| **Main Flow**     | 1. Nhập điểm đón. 2. Nhập điểm đến. 3. Chọn loại xe. 4. Gửi yêu cầu. 5. Hệ thống tiếp nhận Booking |
+| **Exception**     | Không tìm được Driver → thông báo Customer                                                         |
+| **Postcondition** | Booking được tạo và chuyển sang quá trình tìm Driver                                               |
+
+### UC03 – Driver Matching
+
+| Thuộc tính        | Nội dung                                                                                                                   |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **Actor**         | CAB System, Driver                                                                                                         |
+| **Precondition**  | Có Booking mới                                                                                                             |
+| **Main Flow**     | 1. Tìm Driver phù hợp theo vị trí và trạng thái. 2. Gửi yêu cầu cho Driver. 3. Driver Accept. 4. Hệ thống phân công Driver |
+| **Alternative**   | Driver Reject hoặc không phản hồi → tìm Driver khác                                                                        |
+| **Exception**     | Không còn Driver phù hợp → thông báo Customer                                                                              |
+| **Postcondition** | Driver được gán cho Booking hoặc Booking thất bại do không tìm được Driver                                                 |
+
+### UC04 – Thực hiện chuyến đi
+
+| Thuộc tính        | Nội dung                                                                                                                                             |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Actor**         | Driver, Customer                                                                                                                                     |
+| **Precondition**  | Driver đã Accept Booking                                                                                                                             |
+| **Main Flow**     | 1. Driver đến điểm đón. 2. Cập nhật `Arrived`. 3. Đón Customer. 4. Cập nhật `Picked Up/In Progress`. 5. Di chuyển đến điểm đến. 6. Hoàn thành chuyến |
+| **Exception**     | Tài liệu chưa xác định chi tiết cách xử lý mất kết nối hoặc chuyến bị gián đoạn                                                                      |
+| **Postcondition** | Trip chuyển sang `Completed`                                                                                                                         |
+
+### UC05 – Tính cước
+
+| Thuộc tính        | Nội dung                                                                                     |
+| ----------------- | -------------------------------------------------------------------------------------------- |
+| **Actor**         | CAB System                                                                                   |
+| **Precondition**  | Trip đã hoàn thành                                                                           |
+| **Main Flow**     | 1. Lấy loại dịch vụ và thông tin chuyến. 2. Tính Fare. 3. Hiển thị số tiền Customer phải trả |
+| **Exception**     | Công thức tính cước cụ thể chưa được khách hàng xác định                                     |
+| **Postcondition** | Fare của Trip được xác định                                                                  |
+
+### UC06 – Thanh toán
+
+| Thuộc tính        | Nội dung                                                                                                                                       |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Actor**         | Customer, Payment Provider                                                                                                                     |
+| **Precondition**  | Trip hoàn thành và đã tính Fare                                                                                                                |
+| **Main Flow**     | 1. Customer chọn Cash hoặc Electronic Payment. 2. Nếu điện tử, gửi giao dịch tới Payment Provider. 3. Nhận kết quả. 4. Cập nhật Payment Status |
+| **Alternative**   | Customer chọn tiền mặt                                                                                                                         |
+| **Exception**     | Electronic Payment thất bại → thông báo Customer và cho phép xử lý lại theo chính sách doanh nghiệp                                            |
+| **Postcondition** | Kết quả Payment được lưu                                                                                                                       |
+
+### UC07 – Đánh giá Driver
+
+| Thuộc tính        | Nội dung                                                                                  |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| **Actor**         | Customer                                                                                  |
+| **Precondition**  | Trip đã hoàn thành                                                                        |
+| **Main Flow**     | 1. Customer chọn chuyến. 2. Nhập đánh giá Driver. 3. Gửi đánh giá. 4. Hệ thống lưu Rating |
+| **Postcondition** | Rating được liên kết với Trip và Driver                                                   |
+
+### UC08 – Quản lý hệ thống
+
+| Thuộc tính        | Nội dung                                                                                           |
+| ----------------- | -------------------------------------------------------------------------------------------------- |
+| **Actor**         | Operation Staff / Admin                                                                            |
+| **Precondition**  | Nhân viên đã đăng nhập và có quyền phù hợp                                                         |
+| **Main Flow**     | Quản lý Customer, Driver, Vehicle, Trip; xem Transaction; theo dõi chuyến; xử lý sự cố; xem Report |
+| **Exception**     | Không đủ quyền → từ chối thao tác nhạy cảm                                                         |
+| **Postcondition** | Dữ liệu quản trị được cập nhật và thao tác quan trọng được lưu vết                                 |
+
+
+
+## Bước 13: Acception tiêu chí chấp nhận AC
+
+
+Dựa trên các Use Case và yêu cầu của CAB System, có thể xác định các **Acceptance Criteria (AC)** chính như sau. 
+
+| ID       | Use Case              | Acceptance Criteria                                                                                              |
+| -------- | --------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **AC01** | Đăng nhập             | Người dùng nhập đúng thông tin thì đăng nhập thành công; nhập sai thì hệ thống thông báo lỗi                     |
+| **AC02** | Tạo Booking           | Customer nhập đầy đủ điểm đón, điểm đến, loại xe và gửi yêu cầu thì Booking được tạo                             |
+| **AC03** | Driver Matching       | Hệ thống chỉ tìm Driver phù hợp dựa trên vị trí, trạng thái sẵn sàng và tiêu chí vận hành                        |
+| **AC04** | Driver Reject/Timeout | Nếu Driver từ chối hoặc không phản hồi, hệ thống tiếp tục tìm Driver khác mà Customer không phải tạo lại Booking |
+| **AC05** | Không tìm được Driver | Hệ thống phải thông báo rõ ràng cho Customer                                                                     |
+| **AC06** | Theo dõi Trip         | Customer xem được Driver đã nhận chuyến, ETA và trạng thái hiện tại của Trip                                     |
+| **AC07** | Cập nhật Trip         | Driver có thể cập nhật các trạng thái: Arrived, Picked Up, In Progress, Completed                                |
+| **AC08** | Tính Fare             | Khi Trip hoàn thành, hệ thống tính và hiển thị số tiền Customer phải trả                                         |
+| **AC09** | Payment               | Customer có thể chọn Cash hoặc Electronic Payment                                                                |
+| **AC10** | Payment Failure       | Nếu thanh toán điện tử thất bại, hệ thống thông báo Customer và cho phép xử lý lại theo chính sách doanh nghiệp  |
+| **AC11** | Rating                | Customer chỉ có thể đánh giá Driver sau khi Trip đã hoàn thành                                                   |
+| **AC12** | Notification          | Customer/Driver nhận được thông báo tại các sự kiện quan trọng của chuyến                                        |
+| **AC13** | Admin Permission      | Người không có quyền không được thực hiện thao tác quản trị nhạy cảm                                             |
+| **AC14** | Reporting             | Admin/Ban quản lý xem được báo cáo số chuyến, doanh thu, tỷ lệ hoàn thành/hủy và hiệu quả Driver                 |
+| **AC15** | Audit                 | Các thao tác quan trọng phải được lưu vết để phục vụ kiểm tra                                                    |
+
+
+## Bước 14: Truy xuất nguồn gốc yêu cầu
+| Business Goal                  | Business Requirement       | Functional Requirement | Use Case                         | Acceptance Criteria                                         |
+| ------------------------------ | -------------------------- | ---------------------- | -------------------------------- | ----------------------------------------------------------- |
+| **BG01** Tự động hóa đặt xe    | Customer có thể yêu cầu xe | Tạo và quản lý Booking | **UC02** Tạo Booking             | **AC02** Booking được tạo khi thông tin hợp lệ              |
+| **BG03** Tối ưu điều phối      | Tìm Driver phù hợp         | Driver Matching        | **UC03** Driver Matching         | **AC03–05** Tìm Driver, xử lý Reject/Timeout/không tìm thấy |
+| **BG02** Cải thiện trải nghiệm | Customer theo dõi chuyến   | Trip Tracking          | **UC04** Thực hiện/Theo dõi Trip | **AC06–07** Theo dõi và cập nhật trạng thái Trip            |
+| **BG04** Quản lý tập trung     | Quản lý cước chuyến        | Fare Calculation       | **UC05** Tính cước               | **AC08** Tính Fare sau khi Trip hoàn thành                  |
+| **BG04** Quản lý tập trung     | Hỗ trợ thanh toán          | Payment Management     | **UC06** Thanh toán              | **AC09–10** Cash/E-payment và xử lý thất bại                |
+| **BG02** Cải thiện trải nghiệm | Đánh giá sau chuyến        | Rating Management      | **UC07** Đánh giá Driver         | **AC11** Chỉ đánh giá sau Trip Completed                    |
+| **BG02** Cập nhật thông tin    | Gửi thông báo              | Notification           | Send Notification                | **AC12** Thông báo các sự kiện quan trọng                   |
+| **BG04** Quản lý vận hành      | Quản trị hệ thống          | Administration         | **UC08** Quản lý hệ thống        | **AC13** Kiểm soát quyền thao tác                           |
+| **BG05** Theo dõi kinh doanh   | Cung cấp báo cáo           | Reporting              | View Reports                     | **AC14** Xem được các báo cáo yêu cầu                       |
+| **BG04** Kiểm soát hoạt động   | Lưu vết thao tác           | Audit Logging          | Audit                            | **AC15** Thao tác quan trọng được lưu vết                   |
