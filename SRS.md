@@ -1,4 +1,4 @@
-##Bước 1: đọc và phân tích yêu cầu: hiểu về business context và business problem
+## Bước 1: đọc và phân tích yêu cầu: hiểu về business context và business problem
 trả lời câu hỏi: khách hàng muốn giải quyết vấn đề gì
 vì sao không thể đáp ứng, ai sử dụng hệ thống này,
 giá trị sau khi tạo ra
@@ -26,7 +26,7 @@ Công ty ABC muốn xây dựng **CAB System** để tự động hóa và quả
 * Giảm khó khăn cho bộ phận vận hành.
 * Có khả năng **scale và mở rộng tính năng** trong tương lai.
 
-##Bước 2: Xác định stakeholder trong dự án này
+## Bước 2: Xác định stakeholder trong dự án này
 lập bảng cột đầu stakeholder nào, cột 2 vai trò là gì
 vẽ ma trận stakeholder, cho biết mức độ ảnh hưởng của các vai trò trong hệ thống
 
@@ -84,7 +84,7 @@ LOW INTEREST ───────────────┼──────�
 | **Driver**                | 🟠 Trung bình     | Người trực tiếp tham gia Driver Matching và Trip                   |
 | **Notification Provider** | 🟡 Trung bình     | Ảnh hưởng đến Notification nhưng không quyết định toàn bộ hệ thống |
 
-##Bước 3: Tìm Business Goal##
+## Bước 3: Tìm Business Goal
 
 
 Dựa trên yêu cầu của khách hàng, các **Business Goal** chính của CAB System là: 
@@ -99,6 +99,4 @@ Dựa trên yêu cầu của khách hàng, các **Business Goal** chính của C
 | **BG06 – Đảm bảo khả năng mở rộng**             | Phục vụ số lượng lớn người dùng và cho phép mở rộng từng thành phần khi tải tăng   |
 | **BG07 – Hỗ trợ phát triển lâu dài**            | Dễ bổ sung loại dịch vụ, phương thức thanh toán, kênh thông báo và tính năng mới   |
 
-### Business Goal tổng quát
-
-> **Xây dựng CAB System thành một nền tảng đặt xe tự động, quản lý tập trung, ổn định và có khả năng mở rộng lâu dài, đáp ứng toàn bộ quy trình từ đặt xe đến thanh toán và đánh giá.** 
+ 
