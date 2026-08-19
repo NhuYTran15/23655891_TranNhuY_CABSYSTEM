@@ -294,4 +294,88 @@ User/Admin
 | **Auditability**               | Lưu vết các thao tác quan trọng để kiểm tra khi có sự cố                                      |
 | **Integration**                | Hỗ trợ tích hợp Payment Provider bên ngoài mà không lưu trực tiếp dữ liệu thanh toán nhạy cảm |
 | **Deployability**              | Cho phép triển khai chức năng mới từng phần, giảm ảnh hưởng đến toàn hệ thống                 |
+## Bước 11: Tiến hành thiết kế các use case(UC)
+flowchart LR
+    %% Actors
+    Customer[👤 Customer]
+    Driver[🚗 Driver]
+    Admin[👤 Operation Staff / Admin]
+    PaymentProvider[💳 Payment Provider]
+    NotificationProvider[🔔 Notification Provider]
 
+    %% CAB System
+    subgraph CAB["CAB SYSTEM"]
+
+        UC1((Register / Login))
+        UC2((Manage Profile))
+
+        UC3((Create Booking))
+        UC4((Driver Matching))
+        UC5((Track Trip))
+        UC6((View Trip History))
+        UC7((Payment))
+        UC8((Rate Driver))
+
+        UC9((Manage Vehicle))
+        UC10((Update Availability))
+        UC11((Update Location))
+        UC12((Receive Trip Request))
+        UC13((Accept / Reject Trip))
+        UC14((Update Trip Status))
+        UC15((Complete Trip))
+
+        UC16((Calculate Fare))
+        UC17((Send Notification))
+
+        UC18((Manage Customer))
+        UC19((Manage Driver))
+        UC20((Manage Vehicle))
+        UC21((Manage Trip))
+        UC22((Manage Transaction))
+        UC23((Handle Trip Issues))
+        UC24((Manage Permissions))
+        UC25((View Reports))
+    end
+
+    %% Customer
+    Customer --> UC1
+    Customer --> UC2
+    Customer --> UC3
+    Customer --> UC5
+    Customer --> UC6
+    Customer --> UC7
+    Customer --> UC8
+
+    %% Driver
+    Driver --> UC1
+    Driver --> UC2
+    Driver --> UC9
+    Driver --> UC10
+    Driver --> UC11
+    Driver --> UC12
+    Driver --> UC13
+    Driver --> UC14
+    Driver --> UC15
+
+    %% Admin
+    Admin --> UC18
+    Admin --> UC19
+    Admin --> UC20
+    Admin --> UC21
+    Admin --> UC22
+    Admin --> UC23
+    Admin --> UC24
+    Admin --> UC25
+
+    %% Relationships
+    UC3 -. "<<include>>" .-> UC4
+    UC15 -. "<<include>>" .-> UC16
+    UC7 --> PaymentProvider
+
+    UC3 -.-> UC17
+    UC4 -.-> UC17
+    UC14 -.-> UC17
+    UC15 -.-> UC17
+    UC7 -.-> UC17
+
+    UC17 --> NotificationProvider
