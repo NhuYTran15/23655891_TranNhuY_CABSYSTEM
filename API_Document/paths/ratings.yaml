@@ -1,0 +1,60 @@
+tripRatings:
+  parameters:
+  - name: tripId
+    in: path
+    required: true
+    description: Trip identifier.
+    schema:
+      type: string
+  post:
+    tags:
+    - Ratings
+    summary: Rate a driver after a completed trip
+    description: Customer can rate the assigned driver only after the trip is completed.
+    operationId: createTripRating
+    x-srs-trace:
+    - FR16
+    - BR09
+    - UC07
+    - AC11
+    requestBody:
+      required: true
+      description: Payload for RatingCreateRequest.
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yaml#/RatingCreateRequest
+    responses:
+      '201':
+        description: Rating created.
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/Rating
+      '400':
+        $ref: ../components/responses.yaml#/BadRequest
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict
+  get:
+    tags:
+    - Ratings
+    summary: Get rating for a trip
+    operationId: getTripRating
+    x-srs-trace:
+    - BR05
+    - FR16
+    responses:
+      '200':
+        description: Trip rating.
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/Rating
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
+      '404':
+        $ref: ../components/responses.yaml#/NotFound

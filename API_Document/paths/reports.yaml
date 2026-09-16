@@ -1,0 +1,50 @@
+reportOverview:
+  get:
+    tags:
+    - Reports
+    summary: Get business activity overview
+    description: Includes trip count, revenue, completion rate, and cancellation rate requested by management.
+    operationId: getReportOverview
+    x-srs-trace:
+    - FR25
+    - AC14
+    responses:
+      '200':
+        description: Business overview report.
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/ReportOverview
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+driverPerformance:
+  parameters:
+  - name: driverId
+    in: path
+    required: true
+    description: Driver identifier.
+    schema:
+      type: string
+  get:
+    tags:
+    - Reports
+    summary: Get driver performance report
+    operationId: getDriverPerformanceReport
+    x-srs-trace:
+    - FR25
+    - AC14
+    responses:
+      '200':
+        description: Driver performance report.
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/DriverPerformanceReport
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../components/responses.yaml#/NotFound

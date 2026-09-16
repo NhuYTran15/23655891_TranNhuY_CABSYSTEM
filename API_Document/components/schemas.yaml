@@ -1,0 +1,639 @@
+Error:
+  type: object
+  required:
+  - code
+  - message
+  properties:
+    code:
+      type: string
+      example: INVALID_REQUEST
+    message:
+      type: string
+      example: The request is invalid.
+    details:
+      type: object
+      additionalProperties: true
+Customer:
+  type: object
+  description: Customer entity derived from the SRS data model.
+  required:
+  - customerId
+  - name
+  - phone
+  properties:
+    customerId:
+      type: string
+      example: CUS-001
+    name:
+      type: string
+      example: Nguyen Van A
+    phone:
+      type: string
+      example: 0901234567
+    email:
+      type: string
+      format: email
+      example: customer@example.com
+    profile:
+      type: object
+      additionalProperties: true
+CustomerRegistrationRequest:
+  type: object
+  description: Registration fields. Exact credential policy is not defined by the SRS.
+  required:
+  - name
+  - phone
+  - credential
+  properties:
+    name:
+      type: string
+    phone:
+      type: string
+    email:
+      type: string
+      format: email
+    credential:
+      type: string
+      writeOnly: true
+      description: Credential value. Password/token mechanism is TBD because the SRS does not define it.
+CustomerUpdateRequest:
+  type: object
+  properties:
+    name:
+      type: string
+    phone:
+      type: string
+    email:
+      type: string
+      format: email
+    profile:
+      type: object
+      additionalProperties: true
+Driver:
+  type: object
+  description: Driver entity derived from the SRS data model.
+  required:
+  - driverId
+  - name
+  - phone
+  - status
+  properties:
+    driverId:
+      type: string
+      example: DRV-001
+    name:
+      type: string
+      example: Tran Van B
+    phone:
+      type: string
+      example: 0912345678
+    status:
+      type: string
+      description: Driver operating status. Exact allowed values are not fully specified by the SRS.
+      example: AVAILABLE
+    currentLocation:
+      $ref: '#/Location'
+DriverRegistrationRequest:
+  type: object
+  description: Driver registration data. The SRS allows self-registration or account creation by operations staff.
+  required:
+  - name
+  - phone
+  - credential
+  properties:
+    name:
+      type: string
+    phone:
+      type: string
+    credential:
+      type: string
+      writeOnly: true
+      description: Credential value. Authentication mechanism is TBD.
+DriverUpdateRequest:
+  type: object
+  properties:
+    name:
+      type: string
+    phone:
+      type: string
+    profile:
+      type: object
+      additionalProperties: true
+DriverAvailabilityUpdate:
+  type: object
+  required:
+  - available
+  properties:
+    available:
+      type: boolean
+      description: true when the driver is ready to receive trip requests.
+Location:
+  type: object
+  required:
+  - latitude
+  - longitude
+  properties:
+    locationId:
+      type: string
+      readOnly: true
+      example: LOC-001
+    driverId:
+      type: string
+      readOnly: true
+      example: DRV-001
+    latitude:
+      type: number
+      format: double
+      example: 10.8231
+    longitude:
+      type: number
+      format: double
+      example: 106.6297
+    timestamp:
+      type: string
+      format: date-time
+      readOnly: true
+LocationUpdateRequest:
+  type: object
+  required:
+  - latitude
+  - longitude
+  properties:
+    latitude:
+      type: number
+      format: double
+    longitude:
+      type: number
+      format: double
+Vehicle:
+  type: object
+  description: Vehicle entity derived from the SRS data model.
+  required:
+  - vehicleId
+  - driverId
+  - vehicleType
+  - plateNumber
+  properties:
+    vehicleId:
+      type: string
+      example: VEH-001
+    driverId:
+      type: string
+      example: DRV-001
+    vehicleType:
+      type: string
+      example: CAR
+    plateNumber:
+      type: string
+      example: 51A-12345
+    vehicleInfo:
+      type: object
+      additionalProperties: true
+VehicleCreateRequest:
+  type: object
+  required:
+  - vehicleType
+  - plateNumber
+  properties:
+    vehicleType:
+      type: string
+    plateNumber:
+      type: string
+    vehicleInfo:
+      type: object
+      additionalProperties: true
+VehicleUpdateRequest:
+  type: object
+  properties:
+    vehicleType:
+      type: string
+    plateNumber:
+      type: string
+    vehicleInfo:
+      type: object
+      additionalProperties: true
+Booking:
+  type: object
+  description: Booking entity. Status labels are API design labels derived from the lifecycle described in the SRS.
+  required:
+  - bookingId
+  - customerId
+  - pickupLocation
+  - destination
+  - serviceType
+  - status
+  properties:
+    bookingId:
+      type: string
+      example: BKG-001
+    customerId:
+      type: string
+      example: CUS-001
+    pickupLocation:
+      type: string
+      example: Industrial University of Ho Chi Minh City
+    destination:
+      type: string
+      example: Landmark 81
+    serviceType:
+      type: string
+      example: CAR
+    status:
+      type: string
+      enum:
+      - SEARCHING_DRIVER
+      - DRIVER_ASSIGNED
+      - NO_DRIVER_FOUND
+      - IN_TRIP
+      - COMPLETED
+      example: SEARCHING_DRIVER
+    driverId:
+      type: string
+      nullable: true
+      example: DRV-001
+    tripId:
+      type: string
+      nullable: true
+      example: TRIP-001
+BookingCreateRequest:
+  type: object
+  required:
+  - pickupLocation
+  - destination
+  - serviceType
+  properties:
+    pickupLocation:
+      type: string
+    destination:
+      type: string
+    serviceType:
+      type: string
+      description: Service type selected by the customer. Exact service catalog is TBD.
+BookingTracking:
+  type: object
+  properties:
+    bookingId:
+      type: string
+    bookingStatus:
+      type: string
+    driverId:
+      type: string
+      nullable: true
+    driverLocation:
+      allOf:
+      - $ref: '#/Location'
+      nullable: true
+    estimatedArrival:
+      type: string
+      nullable: true
+      description: ETA value. Exact calculation method is not defined by the SRS.
+    tripStatus:
+      type: string
+      nullable: true
+BookingOffer:
+  type: object
+  description: Represents a trip request proposed to a driver during Driver Matching.
+  required:
+  - offerId
+  - bookingId
+  - driverId
+  - status
+  properties:
+    offerId:
+      type: string
+      example: OFFER-001
+    bookingId:
+      type: string
+      example: BKG-001
+    driverId:
+      type: string
+      example: DRV-001
+    pickupLocation:
+      type: string
+    destination:
+      type: string
+    serviceType:
+      type: string
+    status:
+      type: string
+      enum:
+      - PENDING
+      - ACCEPTED
+      - REJECTED
+      - EXPIRED
+BookingOfferResponseRequest:
+  type: object
+  required:
+  - decision
+  properties:
+    decision:
+      type: string
+      enum:
+      - ACCEPT
+      - REJECT
+Trip:
+  type: object
+  description: Trip entity derived from the SRS data model.
+  required:
+  - tripId
+  - bookingId
+  - driverId
+  - tripStatus
+  properties:
+    tripId:
+      type: string
+      example: TRIP-001
+    bookingId:
+      type: string
+      example: BKG-001
+    driverId:
+      type: string
+      example: DRV-001
+    startTime:
+      type: string
+      format: date-time
+      nullable: true
+    endTime:
+      type: string
+      format: date-time
+      nullable: true
+    tripStatus:
+      type: string
+      enum:
+      - ASSIGNED
+      - ARRIVED
+      - PICKED_UP
+      - IN_PROGRESS
+      - COMPLETED
+      example: IN_PROGRESS
+TripStatusUpdateRequest:
+  type: object
+  required:
+  - status
+  properties:
+    status:
+      type: string
+      enum:
+      - ARRIVED
+      - PICKED_UP
+      - IN_PROGRESS
+      - COMPLETED
+Fare:
+  type: object
+  description: Fare entity. The detailed fare formula is explicitly TBD in the SRS.
+  required:
+  - fareId
+  - tripId
+  - amount
+  - serviceType
+  properties:
+    fareId:
+      type: string
+      example: FARE-001
+    tripId:
+      type: string
+      example: TRIP-001
+    amount:
+      type: number
+      format: double
+      example: 125000
+    serviceType:
+      type: string
+      example: CAR
+Payment:
+  type: object
+  description: Payment entity. Sensitive card/account data must not be stored directly in CAB System.
+  required:
+  - paymentId
+  - tripId
+  - method
+  - amount
+  - paymentStatus
+  properties:
+    paymentId:
+      type: string
+      example: PAY-001
+    tripId:
+      type: string
+      example: TRIP-001
+    method:
+      type: string
+      enum:
+      - CASH
+      - ELECTRONIC
+    amount:
+      type: number
+      format: double
+      example: 125000
+    paymentStatus:
+      type: string
+      enum:
+      - PENDING
+      - SUCCESS
+      - FAILED
+      example: SUCCESS
+PaymentCreateRequest:
+  type: object
+  required:
+  - method
+  properties:
+    method:
+      type: string
+      enum:
+      - CASH
+      - ELECTRONIC
+    providerReference:
+      type: string
+      nullable: true
+      description: Optional external payment provider reference. Do not send raw card/account secrets.
+Rating:
+  type: object
+  description: A customer rating for a driver after a completed trip.
+  required:
+  - ratingId
+  - tripId
+  - customerId
+  - driverId
+  - score
+  properties:
+    ratingId:
+      type: string
+      example: RAT-001
+    tripId:
+      type: string
+      example: TRIP-001
+    customerId:
+      type: string
+      example: CUS-001
+    driverId:
+      type: string
+      example: DRV-001
+    score:
+      type: integer
+      minimum: 1
+      maximum: 5
+      example: 5
+    comment:
+      type: string
+      example: Good service
+RatingCreateRequest:
+  type: object
+  required:
+  - score
+  properties:
+    score:
+      type: integer
+      minimum: 1
+      maximum: 5
+    comment:
+      type: string
+Notification:
+  type: object
+  description: Notification entity derived from the SRS data model.
+  required:
+  - notificationId
+  - userId
+  - type
+  - content
+  - status
+  properties:
+    notificationId:
+      type: string
+      example: NOTI-001
+    userId:
+      type: string
+      example: CUS-001
+    type:
+      type: string
+      example: DRIVER_ASSIGNED
+    content:
+      type: string
+      example: A driver has accepted your booking.
+    status:
+      type: string
+      example: DELIVERED
+Transaction:
+  type: object
+  required:
+  - transactionId
+  - paymentId
+  - amount
+  - status
+  - createdAt
+  properties:
+    transactionId:
+      type: string
+      example: TXN-001
+    paymentId:
+      type: string
+      example: PAY-001
+    amount:
+      type: number
+      format: double
+      example: 125000
+    status:
+      type: string
+      example: SUCCESS
+    createdAt:
+      type: string
+      format: date-time
+AuditLog:
+  type: object
+  required:
+  - logId
+  - userId
+  - action
+  - timestamp
+  properties:
+    logId:
+      type: string
+      example: LOG-001
+    userId:
+      type: string
+      example: ADM-001
+    action:
+      type: string
+      example: UPDATE_DRIVER
+    timestamp:
+      type: string
+      format: date-time
+LoginRequest:
+  type: object
+  description: Generic login payload because the SRS does not define a concrete credential format.
+  required:
+  - identifier
+  - credential
+  properties:
+    identifier:
+      type: string
+      example: 0901234567
+    credential:
+      type: string
+      writeOnly: true
+LoginResponse:
+  type: object
+  description: Authentication result. Token/session mechanism is deliberately left unspecified by the SRS.
+  required:
+  - authenticated
+  - userId
+  - role
+  properties:
+    authenticated:
+      type: boolean
+      example: true
+    userId:
+      type: string
+      example: CUS-001
+    role:
+      type: string
+      enum:
+      - CUSTOMER
+      - DRIVER
+      - ADMIN
+    sessionReference:
+      type: string
+      nullable: true
+      description: Placeholder for the implementation-specific authenticated session/token reference.
+AdminTripResolutionRequest:
+  type: object
+  required:
+  - action
+  properties:
+    action:
+      type: string
+      example: MARK_FOR_REVIEW
+    note:
+      type: string
+ReportOverview:
+  type: object
+  description: Business metrics explicitly requested by management in the SRS.
+  properties:
+    tripCount:
+      type: integer
+      example: 1250
+    revenue:
+      type: number
+      format: double
+      example: 250000000
+    completionRate:
+      type: number
+      format: double
+      example: 0.92
+    cancellationRate:
+      type: number
+      format: double
+      example: 0.08
+DriverPerformanceReport:
+  type: object
+  properties:
+    driverId:
+      type: string
+    completedTrips:
+      type: integer
+    completionRate:
+      type: number
+      format: double
+    averageRating:
+      type: number
+      format: double
+      nullable: true

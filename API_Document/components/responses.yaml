@@ -1,0 +1,37 @@
+BadRequest:
+  description: Invalid request.
+  content:
+    application/json:
+      schema:
+        $ref: ./schemas.yaml#/Error
+Unauthenticated:
+  description: Authentication is required. Exact authentication mechanism is TBD.
+  content:
+    application/json:
+      schema:
+        $ref: ./schemas.yaml#/Error
+Forbidden:
+  description: The authenticated user does not have permission for this operation.
+  content:
+    application/json:
+      schema:
+        $ref: ./schemas.yaml#/Error
+NotFound:
+  description: Requested resource was not found.
+  content:
+    application/json:
+      schema:
+        $ref: ./schemas.yaml#/Error
+Conflict:
+  description: The request conflicts with the current business state.
+  content:
+    application/json:
+      schema:
+        $ref: ./schemas.yaml#/Error
+ServiceUnavailable:
+  description: A dependent service is temporarily unavailable. CAB booking flow should remain isolated where required by the
+    SRS.
+  content:
+    application/json:
+      schema:
+        $ref: ./schemas.yaml#/Error

@@ -1,0 +1,133 @@
+bookings:
+  post:
+    tags:
+    - Bookings
+    summary: Create a booking
+    description: Customer provides pickup location, destination, and service type. The system then starts Driver Matching.
+    operationId: createBooking
+    x-srs-trace:
+    - BR01
+    - FR02
+    - UC02
+    - AC02
+    requestBody:
+      required: true
+      description: Payload for BookingCreateRequest.
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yaml#/BookingCreateRequest
+    responses:
+      '201':
+        description: Booking created and driver search started.
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/Booking
+      '400':
+        $ref: ../components/responses.yaml#/BadRequest
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
+bookingById:
+  parameters:
+  - name: bookingId
+    in: path
+    required: true
+    description: Booking identifier.
+    schema:
+      type: string
+  get:
+    tags:
+    - Bookings
+    summary: Get booking details
+    operationId: getBooking
+    x-srs-trace:
+    - FR08
+    - FR15
+    responses:
+      '200':
+        description: Booking details.
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/Booking
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+bookingTracking:
+  parameters:
+  - name: bookingId
+    in: path
+    required: true
+    description: Booking identifier.
+    schema:
+      type: string
+  get:
+    tags:
+    - Bookings
+    - Trips
+    summary: Track booking and trip status
+    description: Returns driver assignment, ETA when available, driver location, and current trip status.
+    operationId: trackBooking
+    x-srs-trace:
+    - BR04
+    - FR06
+    - FR07
+    - FR08
+    - AC06
+    responses:
+      '200':
+        description: Booking/trip tracking information.
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/BookingTracking
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+bookingOfferResponse:
+  parameters:
+  - name: offerId
+    in: path
+    required: true
+    description: Booking offer identifier.
+    schema:
+      type: string
+  post:
+    tags:
+    - Driver Matching
+    summary: Accept or reject a booking offer
+    description: If rejected or not answered, the system must continue matching another suitable driver without requiring
+      a new customer booking.
+    operationId: respondToBookingOffer
+    x-srs-trace:
+    - FR04
+    - FR05
+    - BR04
+    - BR05
+    - UC03
+    - AC04
+    requestBody:
+      required: true
+      description: Payload for BookingOfferResponseRequest.
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yaml#/BookingOfferResponseRequest
+    responses:
+      '200':
+        description: Booking offer response recorded.
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/BookingOffer
+      '400':
+        $ref: ../components/responses.yaml#/BadRequest
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict

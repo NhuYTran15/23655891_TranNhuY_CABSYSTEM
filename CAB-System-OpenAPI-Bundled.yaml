@@ -1,0 +1,1863 @@
+openapi: 3.0.3
+info:
+  title: CAB System API
+  version: 1.0.0
+  description: 'API documentation derived from SRS.md for ABC Company''s CAB System.
+
+
+    Scope covered: account management, booking, driver/vehicle management, driver matching,
+
+    trip tracking, fare, payment, notifications, rating, administration, reporting, and audit.
+
+
+    Important SRS gaps intentionally left implementation-specific:
+
+    - detailed fare formula
+
+    - driver ranking/priority algorithm
+
+    - driver response timeout
+
+    - cancellation policy
+
+    - offline/network-loss handling
+
+    - data retention period
+
+    - concrete payment provider
+
+    - concrete notification provider/channel
+
+    - concrete authentication mechanism'
+tags:
+- name: Authentication
+  description: Registration and authentication.
+- name: Customers
+  description: Customer profile and history.
+- name: Drivers
+  description: Driver profile, availability, and location.
+- name: Locations
+  description: Driver location tracking.
+- name: Vehicles
+  description: Vehicle information.
+- name: Bookings
+  description: Booking creation and tracking.
+- name: Driver Matching
+  description: Offer and driver response during matching.
+- name: Trips
+  description: Trip execution and status.
+- name: Fares
+  description: Trip fare information.
+- name: Payments
+  description: Cash/electronic payment processing.
+- name: Ratings
+  description: Post-trip driver ratings.
+- name: Notifications
+  description: Customer and driver notifications.
+- name: Administration
+  description: Operations/admin management functions.
+- name: Reports
+  description: Business reports requested by management.
+- name: Audit
+  description: Audit logs for important actions.
+paths:
+  /auth/customers/register:
+    post:
+      tags:
+      - Authentication
+      summary: Register a customer account
+      description: Allows a Customer to register. Credential policy is not defined by the SRS.
+      operationId: registerCustomer
+      x-srs-trace:
+      - Account Management
+      - UC01
+      - AC01
+      requestBody:
+        required: true
+        description: Payload for CustomerRegistrationRequest.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRegistrationRequest'
+      responses:
+        '201':
+          description: Customer account created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /auth/drivers/register:
+    post:
+      tags:
+      - Authentication
+      summary: Register a driver account
+      description: Allows Driver registration. The SRS also allows operations staff to create driver accounts.
+      operationId: registerDriver
+      x-srs-trace:
+      - Account Management
+      - UC01
+      requestBody:
+        required: true
+        description: Payload for DriverRegistrationRequest.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverRegistrationRequest'
+      responses:
+        '201':
+          description: Driver account created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /auth/login:
+    post:
+      tags:
+      - Authentication
+      summary: Authenticate a user
+      description: Authenticates Customer, Driver, or Admin. The SRS requires authentication but does not specify JWT, OAuth,
+        cookies, or another mechanism.
+      operationId: login
+      x-srs-trace:
+      - BR01
+      - FR23
+      - UC01
+      - AC01
+      requestBody:
+        required: true
+        description: Payload for LoginRequest.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /customers/{customerId}:
+    parameters:
+    - name: customerId
+      in: path
+      required: true
+      description: Customer identifier.
+      schema:
+        type: string
+    get:
+      tags:
+      - Customers
+      summary: Get customer profile
+      operationId: getCustomer
+      x-srs-trace:
+      - Account Management
+      - FR17
+      responses:
+        '200':
+          description: Customer profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - Customers
+      summary: Update customer profile
+      operationId: updateCustomer
+      x-srs-trace:
+      - Account Management
+      - FR17
+      requestBody:
+        required: true
+        description: Payload for CustomerUpdateRequest.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerUpdateRequest'
+      responses:
+        '200':
+          description: Updated customer profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /customers/{customerId}/bookings:
+    parameters:
+    - name: customerId
+      in: path
+      required: true
+      description: Customer identifier.
+      schema:
+        type: string
+    get:
+      tags:
+      - Customers
+      - Bookings
+      summary: Get customer booking/trip history
+      description: Supports the SRS requirement for customers to view trip history.
+      operationId: getCustomerBookings
+      x-srs-trace:
+      - FR15
+      - BR05
+      responses:
+        '200':
+          description: Customer booking history.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /drivers/{driverId}:
+    parameters:
+    - name: driverId
+      in: path
+      required: true
+      description: Driver identifier.
+      schema:
+        type: string
+    get:
+      tags:
+      - Drivers
+      summary: Get driver profile
+      operationId: getDriver
+      x-srs-trace:
+      - FR18
+      responses:
+        '200':
+          description: Driver profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - Drivers
+      summary: Update driver profile
+      operationId: updateDriver
+      x-srs-trace:
+      - FR18
+      requestBody:
+        required: true
+        description: Payload for DriverUpdateRequest.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverUpdateRequest'
+      responses:
+        '200':
+          description: Updated driver profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /drivers/{driverId}/availability:
+    parameters:
+    - name: driverId
+      in: path
+      required: true
+      description: Driver identifier.
+      schema:
+        type: string
+    patch:
+      tags:
+      - Drivers
+      summary: Set driver availability
+      description: Only available drivers are eligible for matching.
+      operationId: setDriverAvailability
+      x-srs-trace:
+      - FR01
+      - BR02
+      - UC06
+      requestBody:
+        required: true
+        description: Payload for DriverAvailabilityUpdate.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverAvailabilityUpdate'
+      responses:
+        '200':
+          description: Driver status updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /drivers/{driverId}/locations:
+    parameters:
+    - name: driverId
+      in: path
+      required: true
+      description: Driver identifier.
+      schema:
+        type: string
+    post:
+      tags:
+      - Drivers
+      - Locations
+      summary: Update driver location
+      description: Stores driver location to support nearby-driver matching and ETA estimation.
+      operationId: updateDriverLocation
+      x-srs-trace:
+      - FR07
+      - BR08
+      requestBody:
+        required: true
+        description: Payload for LocationUpdateRequest.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationUpdateRequest'
+      responses:
+        '201':
+          description: Location recorded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /drivers/{driverId}/locations/latest:
+    parameters:
+    - name: driverId
+      in: path
+      required: true
+      description: Driver identifier.
+      schema:
+        type: string
+    get:
+      tags:
+      - Drivers
+      - Locations
+      summary: Get driver's latest location
+      operationId: getDriverLatestLocation
+      x-srs-trace:
+      - FR07
+      responses:
+        '200':
+          description: Latest known driver location.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /drivers/{driverId}/booking-offers:
+    parameters:
+    - name: driverId
+      in: path
+      required: true
+      description: Driver identifier.
+      schema:
+        type: string
+    get:
+      tags:
+      - Drivers
+      - Driver Matching
+      summary: Get trip requests offered to a driver
+      description: Represents the SRS requirement for drivers to receive suitable trip requests.
+      operationId: getDriverBookingOffers
+      x-srs-trace:
+      - FR03
+      - UC03
+      responses:
+        '200':
+          description: Pending or recent booking offers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookingOffer'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /drivers/{driverId}/vehicles:
+    parameters:
+    - name: driverId
+      in: path
+      required: true
+      description: Driver identifier.
+      schema:
+        type: string
+    get:
+      tags:
+      - Vehicles
+      summary: Get vehicles for a driver
+      operationId: getDriverVehicles
+      x-srs-trace:
+      - FR19
+      responses:
+        '200':
+          description: Driver vehicles.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vehicle'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+      - Vehicles
+      summary: Create vehicle information for a driver
+      operationId: createDriverVehicle
+      x-srs-trace:
+      - FR19
+      requestBody:
+        required: true
+        description: Payload for VehicleCreateRequest.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleCreateRequest'
+      responses:
+        '201':
+          description: Vehicle created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /vehicles/{vehicleId}:
+    parameters:
+    - name: vehicleId
+      in: path
+      required: true
+      description: Vehicle identifier.
+      schema:
+        type: string
+    get:
+      tags:
+      - Vehicles
+      summary: Get vehicle information
+      operationId: getVehicle
+      x-srs-trace:
+      - FR19
+      responses:
+        '200':
+          description: Vehicle information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+      - Vehicles
+      summary: Update vehicle information
+      operationId: updateVehicle
+      x-srs-trace:
+      - FR19
+      requestBody:
+        required: true
+        description: Payload for VehicleUpdateRequest.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleUpdateRequest'
+      responses:
+        '200':
+          description: Updated vehicle.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /bookings:
+    post:
+      tags:
+      - Bookings
+      summary: Create a booking
+      description: Customer provides pickup location, destination, and service type. The system then starts Driver Matching.
+      operationId: createBooking
+      x-srs-trace:
+      - BR01
+      - FR02
+      - UC02
+      - AC02
+      requestBody:
+        required: true
+        description: Payload for BookingCreateRequest.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingCreateRequest'
+      responses:
+        '201':
+          description: Booking created and driver search started.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /bookings/{bookingId}:
+    parameters:
+    - name: bookingId
+      in: path
+      required: true
+      description: Booking identifier.
+      schema:
+        type: string
+    get:
+      tags:
+      - Bookings
+      summary: Get booking details
+      operationId: getBooking
+      x-srs-trace:
+      - FR08
+      - FR15
+      responses:
+        '200':
+          description: Booking details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /bookings/{bookingId}/tracking:
+    parameters:
+    - name: bookingId
+      in: path
+      required: true
+      description: Booking identifier.
+      schema:
+        type: string
+    get:
+      tags:
+      - Bookings
+      - Trips
+      summary: Track booking and trip status
+      description: Returns driver assignment, ETA when available, driver location, and current trip status.
+      operationId: trackBooking
+      x-srs-trace:
+      - BR04
+      - FR06
+      - FR07
+      - FR08
+      - AC06
+      responses:
+        '200':
+          description: Booking/trip tracking information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingTracking'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /booking-offers/{offerId}/response:
+    parameters:
+    - name: offerId
+      in: path
+      required: true
+      description: Booking offer identifier.
+      schema:
+        type: string
+    post:
+      tags:
+      - Driver Matching
+      summary: Accept or reject a booking offer
+      description: If rejected or not answered, the system must continue matching another suitable driver without requiring
+        a new customer booking.
+      operationId: respondToBookingOffer
+      x-srs-trace:
+      - FR04
+      - FR05
+      - BR04
+      - BR05
+      - UC03
+      - AC04
+      requestBody:
+        required: true
+        description: Payload for BookingOfferResponseRequest.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingOfferResponseRequest'
+      responses:
+        '200':
+          description: Booking offer response recorded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingOffer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /trips/{tripId}:
+    parameters:
+    - name: tripId
+      in: path
+      required: true
+      description: Trip identifier.
+      schema:
+        type: string
+    get:
+      tags:
+      - Trips
+      summary: Get trip details
+      operationId: getTrip
+      x-srs-trace:
+      - FR08
+      - FR20
+      responses:
+        '200':
+          description: Trip details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /trips/{tripId}/status:
+    parameters:
+    - name: tripId
+      in: path
+      required: true
+      description: Trip identifier.
+      schema:
+        type: string
+    patch:
+      tags:
+      - Trips
+      summary: Update trip status
+      description: 'Driver updates trip progress: ARRIVED, PICKED_UP, IN_PROGRESS, COMPLETED.'
+      operationId: updateTripStatus
+      x-srs-trace:
+      - FR09
+      - UC04
+      - AC07
+      requestBody:
+        required: true
+        description: Payload for TripStatusUpdateRequest.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripStatusUpdateRequest'
+      responses:
+        '200':
+          description: Trip status updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /trips/{tripId}/fare:
+    parameters:
+    - name: tripId
+      in: path
+      required: true
+      description: Trip identifier.
+      schema:
+        type: string
+    get:
+      tags:
+      - Fares
+      summary: Get fare for a completed trip
+      description: Fare is based on service type and trip information. The detailed calculation formula is TBD in the SRS.
+      operationId: getTripFare
+      x-srs-trace:
+      - FR10
+      - BR06
+      - UC05
+      - AC08
+      responses:
+        '200':
+          description: Fare information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fare'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Fare is not available because the trip has not reached the required state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /trips/{tripId}/payments:
+    parameters:
+    - name: tripId
+      in: path
+      required: true
+      description: Trip identifier.
+      schema:
+        type: string
+    post:
+      tags:
+      - Payments
+      summary: Create a payment for a trip
+      description: Supports CASH or ELECTRONIC payment. Electronic payment is processed through an external provider and CAB
+        must not store raw sensitive payment details.
+      operationId: createTripPayment
+      x-srs-trace:
+      - FR11
+      - FR12
+      - FR13
+      - BR07
+      - BR08
+      - UC06
+      - AC09
+      - AC10
+      requestBody:
+        required: true
+        description: Payload for PaymentCreateRequest.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentCreateRequest'
+      responses:
+        '201':
+          description: Payment created/processed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /payments/{paymentId}:
+    parameters:
+    - name: paymentId
+      in: path
+      required: true
+      description: Payment identifier.
+      schema:
+        type: string
+    get:
+      tags:
+      - Payments
+      summary: Get payment result
+      operationId: getPayment
+      x-srs-trace:
+      - FR13
+      - AC10
+      responses:
+        '200':
+          description: Payment information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /trips/{tripId}/ratings:
+    parameters:
+    - name: tripId
+      in: path
+      required: true
+      description: Trip identifier.
+      schema:
+        type: string
+    post:
+      tags:
+      - Ratings
+      summary: Rate a driver after a completed trip
+      description: Customer can rate the assigned driver only after the trip is completed.
+      operationId: createTripRating
+      x-srs-trace:
+      - FR16
+      - BR09
+      - UC07
+      - AC11
+      requestBody:
+        required: true
+        description: Payload for RatingCreateRequest.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingCreateRequest'
+      responses:
+        '201':
+          description: Rating created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rating'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    get:
+      tags:
+      - Ratings
+      summary: Get rating for a trip
+      operationId: getTripRating
+      x-srs-trace:
+      - BR05
+      - FR16
+      responses:
+        '200':
+          description: Trip rating.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rating'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /notifications:
+    get:
+      tags:
+      - Notifications
+      summary: Get notifications for the authenticated user
+      description: Covers booking accepted, driver assigned/arrived, trip completion, payment result, and driver trip-request
+        notifications.
+      operationId: getNotifications
+      x-srs-trace:
+      - FR06
+      - FR14
+      - AC12
+      responses:
+        '200':
+          description: Notifications.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /admin/customers:
+    get:
+      tags:
+      - Administration
+      summary: List customers for operations management
+      operationId: adminListCustomers
+      x-srs-trace:
+      - FR17
+      - UC08
+      - AC13
+      responses:
+        '200':
+          description: Customer list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /admin/drivers:
+    get:
+      tags:
+      - Administration
+      summary: List drivers for operations management
+      operationId: adminListDrivers
+      x-srs-trace:
+      - FR18
+      - UC08
+      - AC13
+      responses:
+        '200':
+          description: Driver list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Driver'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+      - Administration
+      summary: Create a driver account as operations staff
+      operationId: adminCreateDriver
+      x-srs-trace:
+      - FR18
+      - UC08
+      - AC13
+      requestBody:
+        required: true
+        description: Payload for DriverRegistrationRequest.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverRegistrationRequest'
+      responses:
+        '201':
+          description: Driver account created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /admin/vehicles:
+    get:
+      tags:
+      - Administration
+      summary: List vehicles for operations management
+      operationId: adminListVehicles
+      x-srs-trace:
+      - FR19
+      - UC08
+      - AC13
+      responses:
+        '200':
+          description: Vehicle list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vehicle'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /admin/trips:
+    get:
+      tags:
+      - Administration
+      summary: List and monitor trips
+      operationId: adminListTrips
+      x-srs-trace:
+      - FR20
+      - FR22
+      - UC08
+      parameters:
+      - name: status
+        in: query
+        required: false
+        description: Optional trip status filter.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Trips.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Trip'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /admin/trips/{tripId}/resolution:
+    parameters:
+    - name: tripId
+      in: path
+      required: true
+      description: Trip identifier.
+      schema:
+        type: string
+    patch:
+      tags:
+      - Administration
+      summary: Record an operations action for a problematic trip
+      description: The SRS requires operations staff to support trip-error handling but does not define detailed recovery
+        rules.
+      operationId: adminResolveTripIssue
+      x-srs-trace:
+      - FR22
+      - UC08
+      requestBody:
+        required: true
+        description: Payload for AdminTripResolutionRequest.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminTripResolutionRequest'
+      responses:
+        '200':
+          description: Trip after operations handling.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /admin/transactions:
+    get:
+      tags:
+      - Administration
+      summary: Search transaction history
+      operationId: adminListTransactions
+      x-srs-trace:
+      - FR21
+      - UC08
+      responses:
+        '200':
+          description: Transaction history.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /reports/overview:
+    get:
+      tags:
+      - Reports
+      summary: Get business activity overview
+      description: Includes trip count, revenue, completion rate, and cancellation rate requested by management.
+      operationId: getReportOverview
+      x-srs-trace:
+      - FR25
+      - AC14
+      responses:
+        '200':
+          description: Business overview report.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportOverview'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /reports/drivers/{driverId}/performance:
+    parameters:
+    - name: driverId
+      in: path
+      required: true
+      description: Driver identifier.
+      schema:
+        type: string
+    get:
+      tags:
+      - Reports
+      summary: Get driver performance report
+      operationId: getDriverPerformanceReport
+      x-srs-trace:
+      - FR25
+      - AC14
+      responses:
+        '200':
+          description: Driver performance report.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverPerformanceReport'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /audit-logs:
+    get:
+      tags:
+      - Audit
+      summary: Get audit logs
+      description: Provides traceability for important operations as required by the SRS.
+      operationId: getAuditLogs
+      x-srs-trace:
+      - FR24
+      - BR11
+      - AC15
+      responses:
+        '200':
+          description: Audit logs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLog'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          type: string
+          example: INVALID_REQUEST
+        message:
+          type: string
+          example: The request is invalid.
+        details:
+          type: object
+          additionalProperties: true
+    Customer:
+      type: object
+      description: Customer entity derived from the SRS data model.
+      required:
+      - customerId
+      - name
+      - phone
+      properties:
+        customerId:
+          type: string
+          example: CUS-001
+        name:
+          type: string
+          example: Nguyen Van A
+        phone:
+          type: string
+          example: 0901234567
+        email:
+          type: string
+          format: email
+          example: customer@example.com
+        profile:
+          type: object
+          additionalProperties: true
+    CustomerRegistrationRequest:
+      type: object
+      description: Registration fields. Exact credential policy is not defined by the SRS.
+      required:
+      - name
+      - phone
+      - credential
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        credential:
+          type: string
+          writeOnly: true
+          description: Credential value. Password/token mechanism is TBD because the SRS does not define it.
+    CustomerUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        profile:
+          type: object
+          additionalProperties: true
+    Driver:
+      type: object
+      description: Driver entity derived from the SRS data model.
+      required:
+      - driverId
+      - name
+      - phone
+      - status
+      properties:
+        driverId:
+          type: string
+          example: DRV-001
+        name:
+          type: string
+          example: Tran Van B
+        phone:
+          type: string
+          example: 0912345678
+        status:
+          type: string
+          description: Driver operating status. Exact allowed values are not fully specified by the SRS.
+          example: AVAILABLE
+        currentLocation:
+          $ref: '#/components/schemas/Location'
+    DriverRegistrationRequest:
+      type: object
+      description: Driver registration data. The SRS allows self-registration or account creation by operations staff.
+      required:
+      - name
+      - phone
+      - credential
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        credential:
+          type: string
+          writeOnly: true
+          description: Credential value. Authentication mechanism is TBD.
+    DriverUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        profile:
+          type: object
+          additionalProperties: true
+    DriverAvailabilityUpdate:
+      type: object
+      required:
+      - available
+      properties:
+        available:
+          type: boolean
+          description: true when the driver is ready to receive trip requests.
+    Location:
+      type: object
+      required:
+      - latitude
+      - longitude
+      properties:
+        locationId:
+          type: string
+          readOnly: true
+          example: LOC-001
+        driverId:
+          type: string
+          readOnly: true
+          example: DRV-001
+        latitude:
+          type: number
+          format: double
+          example: 10.8231
+        longitude:
+          type: number
+          format: double
+          example: 106.6297
+        timestamp:
+          type: string
+          format: date-time
+          readOnly: true
+    LocationUpdateRequest:
+      type: object
+      required:
+      - latitude
+      - longitude
+      properties:
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+    Vehicle:
+      type: object
+      description: Vehicle entity derived from the SRS data model.
+      required:
+      - vehicleId
+      - driverId
+      - vehicleType
+      - plateNumber
+      properties:
+        vehicleId:
+          type: string
+          example: VEH-001
+        driverId:
+          type: string
+          example: DRV-001
+        vehicleType:
+          type: string
+          example: CAR
+        plateNumber:
+          type: string
+          example: 51A-12345
+        vehicleInfo:
+          type: object
+          additionalProperties: true
+    VehicleCreateRequest:
+      type: object
+      required:
+      - vehicleType
+      - plateNumber
+      properties:
+        vehicleType:
+          type: string
+        plateNumber:
+          type: string
+        vehicleInfo:
+          type: object
+          additionalProperties: true
+    VehicleUpdateRequest:
+      type: object
+      properties:
+        vehicleType:
+          type: string
+        plateNumber:
+          type: string
+        vehicleInfo:
+          type: object
+          additionalProperties: true
+    Booking:
+      type: object
+      description: Booking entity. Status labels are API design labels derived from the lifecycle described in the SRS.
+      required:
+      - bookingId
+      - customerId
+      - pickupLocation
+      - destination
+      - serviceType
+      - status
+      properties:
+        bookingId:
+          type: string
+          example: BKG-001
+        customerId:
+          type: string
+          example: CUS-001
+        pickupLocation:
+          type: string
+          example: Industrial University of Ho Chi Minh City
+        destination:
+          type: string
+          example: Landmark 81
+        serviceType:
+          type: string
+          example: CAR
+        status:
+          type: string
+          enum:
+          - SEARCHING_DRIVER
+          - DRIVER_ASSIGNED
+          - NO_DRIVER_FOUND
+          - IN_TRIP
+          - COMPLETED
+          example: SEARCHING_DRIVER
+        driverId:
+          type: string
+          nullable: true
+          example: DRV-001
+        tripId:
+          type: string
+          nullable: true
+          example: TRIP-001
+    BookingCreateRequest:
+      type: object
+      required:
+      - pickupLocation
+      - destination
+      - serviceType
+      properties:
+        pickupLocation:
+          type: string
+        destination:
+          type: string
+        serviceType:
+          type: string
+          description: Service type selected by the customer. Exact service catalog is TBD.
+    BookingTracking:
+      type: object
+      properties:
+        bookingId:
+          type: string
+        bookingStatus:
+          type: string
+        driverId:
+          type: string
+          nullable: true
+        driverLocation:
+          allOf:
+          - $ref: '#/components/schemas/Location'
+          nullable: true
+        estimatedArrival:
+          type: string
+          nullable: true
+          description: ETA value. Exact calculation method is not defined by the SRS.
+        tripStatus:
+          type: string
+          nullable: true
+    BookingOffer:
+      type: object
+      description: Represents a trip request proposed to a driver during Driver Matching.
+      required:
+      - offerId
+      - bookingId
+      - driverId
+      - status
+      properties:
+        offerId:
+          type: string
+          example: OFFER-001
+        bookingId:
+          type: string
+          example: BKG-001
+        driverId:
+          type: string
+          example: DRV-001
+        pickupLocation:
+          type: string
+        destination:
+          type: string
+        serviceType:
+          type: string
+        status:
+          type: string
+          enum:
+          - PENDING
+          - ACCEPTED
+          - REJECTED
+          - EXPIRED
+    BookingOfferResponseRequest:
+      type: object
+      required:
+      - decision
+      properties:
+        decision:
+          type: string
+          enum:
+          - ACCEPT
+          - REJECT
+    Trip:
+      type: object
+      description: Trip entity derived from the SRS data model.
+      required:
+      - tripId
+      - bookingId
+      - driverId
+      - tripStatus
+      properties:
+        tripId:
+          type: string
+          example: TRIP-001
+        bookingId:
+          type: string
+          example: BKG-001
+        driverId:
+          type: string
+          example: DRV-001
+        startTime:
+          type: string
+          format: date-time
+          nullable: true
+        endTime:
+          type: string
+          format: date-time
+          nullable: true
+        tripStatus:
+          type: string
+          enum:
+          - ASSIGNED
+          - ARRIVED
+          - PICKED_UP
+          - IN_PROGRESS
+          - COMPLETED
+          example: IN_PROGRESS
+    TripStatusUpdateRequest:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          type: string
+          enum:
+          - ARRIVED
+          - PICKED_UP
+          - IN_PROGRESS
+          - COMPLETED
+    Fare:
+      type: object
+      description: Fare entity. The detailed fare formula is explicitly TBD in the SRS.
+      required:
+      - fareId
+      - tripId
+      - amount
+      - serviceType
+      properties:
+        fareId:
+          type: string
+          example: FARE-001
+        tripId:
+          type: string
+          example: TRIP-001
+        amount:
+          type: number
+          format: double
+          example: 125000
+        serviceType:
+          type: string
+          example: CAR
+    Payment:
+      type: object
+      description: Payment entity. Sensitive card/account data must not be stored directly in CAB System.
+      required:
+      - paymentId
+      - tripId
+      - method
+      - amount
+      - paymentStatus
+      properties:
+        paymentId:
+          type: string
+          example: PAY-001
+        tripId:
+          type: string
+          example: TRIP-001
+        method:
+          type: string
+          enum:
+          - CASH
+          - ELECTRONIC
+        amount:
+          type: number
+          format: double
+          example: 125000
+        paymentStatus:
+          type: string
+          enum:
+          - PENDING
+          - SUCCESS
+          - FAILED
+          example: SUCCESS
+    PaymentCreateRequest:
+      type: object
+      required:
+      - method
+      properties:
+        method:
+          type: string
+          enum:
+          - CASH
+          - ELECTRONIC
+        providerReference:
+          type: string
+          nullable: true
+          description: Optional external payment provider reference. Do not send raw card/account secrets.
+    Rating:
+      type: object
+      description: A customer rating for a driver after a completed trip.
+      required:
+      - ratingId
+      - tripId
+      - customerId
+      - driverId
+      - score
+      properties:
+        ratingId:
+          type: string
+          example: RAT-001
+        tripId:
+          type: string
+          example: TRIP-001
+        customerId:
+          type: string
+          example: CUS-001
+        driverId:
+          type: string
+          example: DRV-001
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comment:
+          type: string
+          example: Good service
+    RatingCreateRequest:
+      type: object
+      required:
+      - score
+      properties:
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+    Notification:
+      type: object
+      description: Notification entity derived from the SRS data model.
+      required:
+      - notificationId
+      - userId
+      - type
+      - content
+      - status
+      properties:
+        notificationId:
+          type: string
+          example: NOTI-001
+        userId:
+          type: string
+          example: CUS-001
+        type:
+          type: string
+          example: DRIVER_ASSIGNED
+        content:
+          type: string
+          example: A driver has accepted your booking.
+        status:
+          type: string
+          example: DELIVERED
+    Transaction:
+      type: object
+      required:
+      - transactionId
+      - paymentId
+      - amount
+      - status
+      - createdAt
+      properties:
+        transactionId:
+          type: string
+          example: TXN-001
+        paymentId:
+          type: string
+          example: PAY-001
+        amount:
+          type: number
+          format: double
+          example: 125000
+        status:
+          type: string
+          example: SUCCESS
+        createdAt:
+          type: string
+          format: date-time
+    AuditLog:
+      type: object
+      required:
+      - logId
+      - userId
+      - action
+      - timestamp
+      properties:
+        logId:
+          type: string
+          example: LOG-001
+        userId:
+          type: string
+          example: ADM-001
+        action:
+          type: string
+          example: UPDATE_DRIVER
+        timestamp:
+          type: string
+          format: date-time
+    LoginRequest:
+      type: object
+      description: Generic login payload because the SRS does not define a concrete credential format.
+      required:
+      - identifier
+      - credential
+      properties:
+        identifier:
+          type: string
+          example: 0901234567
+        credential:
+          type: string
+          writeOnly: true
+    LoginResponse:
+      type: object
+      description: Authentication result. Token/session mechanism is deliberately left unspecified by the SRS.
+      required:
+      - authenticated
+      - userId
+      - role
+      properties:
+        authenticated:
+          type: boolean
+          example: true
+        userId:
+          type: string
+          example: CUS-001
+        role:
+          type: string
+          enum:
+          - CUSTOMER
+          - DRIVER
+          - ADMIN
+        sessionReference:
+          type: string
+          nullable: true
+          description: Placeholder for the implementation-specific authenticated session/token reference.
+    AdminTripResolutionRequest:
+      type: object
+      required:
+      - action
+      properties:
+        action:
+          type: string
+          example: MARK_FOR_REVIEW
+        note:
+          type: string
+    ReportOverview:
+      type: object
+      description: Business metrics explicitly requested by management in the SRS.
+      properties:
+        tripCount:
+          type: integer
+          example: 1250
+        revenue:
+          type: number
+          format: double
+          example: 250000000
+        completionRate:
+          type: number
+          format: double
+          example: 0.92
+        cancellationRate:
+          type: number
+          format: double
+          example: 0.08
+    DriverPerformanceReport:
+      type: object
+      properties:
+        driverId:
+          type: string
+        completedTrips:
+          type: integer
+        completionRate:
+          type: number
+          format: double
+        averageRating:
+          type: number
+          format: double
+          nullable: true
+  responses:
+    BadRequest:
+      description: Invalid request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthenticated:
+      description: Authentication is required. Exact authentication mechanism is TBD.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: The authenticated user does not have permission for this operation.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: The request conflicts with the current business state.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ServiceUnavailable:
+      description: A dependent service is temporarily unavailable. CAB booking flow should remain isolated where required
+        by the SRS.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

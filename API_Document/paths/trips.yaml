@@ -1,0 +1,67 @@
+tripById:
+  parameters:
+  - name: tripId
+    in: path
+    required: true
+    description: Trip identifier.
+    schema:
+      type: string
+  get:
+    tags:
+    - Trips
+    summary: Get trip details
+    operationId: getTrip
+    x-srs-trace:
+    - FR08
+    - FR20
+    responses:
+      '200':
+        description: Trip details.
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/Trip
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+tripStatus:
+  parameters:
+  - name: tripId
+    in: path
+    required: true
+    description: Trip identifier.
+    schema:
+      type: string
+  patch:
+    tags:
+    - Trips
+    summary: Update trip status
+    description: 'Driver updates trip progress: ARRIVED, PICKED_UP, IN_PROGRESS, COMPLETED.'
+    operationId: updateTripStatus
+    x-srs-trace:
+    - FR09
+    - UC04
+    - AC07
+    requestBody:
+      required: true
+      description: Payload for TripStatusUpdateRequest.
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yaml#/TripStatusUpdateRequest
+    responses:
+      '200':
+        description: Trip status updated.
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/Trip
+      '400':
+        $ref: ../components/responses.yaml#/BadRequest
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        $ref: ../components/responses.yaml#/Conflict

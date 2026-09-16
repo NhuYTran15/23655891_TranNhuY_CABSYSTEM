@@ -1,0 +1,36 @@
+tripFare:
+  parameters:
+  - name: tripId
+    in: path
+    required: true
+    description: Trip identifier.
+    schema:
+      type: string
+  get:
+    tags:
+    - Fares
+    summary: Get fare for a completed trip
+    description: Fare is based on service type and trip information. The detailed calculation formula is TBD in the SRS.
+    operationId: getTripFare
+    x-srs-trace:
+    - FR10
+    - BR06
+    - UC05
+    - AC08
+    responses:
+      '200':
+        description: Fare information.
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/Fare
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+      '409':
+        description: Fare is not available because the trip has not reached the required state.
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/Error
