@@ -1,0 +1,187 @@
+driverById:
+  parameters:
+  - name: driverId
+    in: path
+    required: true
+    description: Driver identifier.
+    schema:
+      type: string
+  get:
+    tags:
+    - Drivers
+    summary: Get driver profile
+    operationId: getDriver
+    x-srs-trace:
+    - FR18
+    responses:
+      '200':
+        description: Driver profile.
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/Driver
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+  patch:
+    tags:
+    - Drivers
+    summary: Update driver profile
+    operationId: updateDriver
+    x-srs-trace:
+    - FR18
+    requestBody:
+      required: true
+      description: Payload for DriverUpdateRequest.
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yaml#/DriverUpdateRequest
+    responses:
+      '200':
+        description: Updated driver profile.
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/Driver
+      '400':
+        $ref: ../components/responses.yaml#/BadRequest
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+driverAvailability:
+  parameters:
+  - name: driverId
+    in: path
+    required: true
+    description: Driver identifier.
+    schema:
+      type: string
+  patch:
+    tags:
+    - Drivers
+    summary: Set driver availability
+    description: Only available drivers are eligible for matching.
+    operationId: setDriverAvailability
+    x-srs-trace:
+    - FR01
+    - BR02
+    - UC06
+    requestBody:
+      required: true
+      description: Payload for DriverAvailabilityUpdate.
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yaml#/DriverAvailabilityUpdate
+    responses:
+      '200':
+        description: Driver status updated.
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/Driver
+      '400':
+        $ref: ../components/responses.yaml#/BadRequest
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+driverLocations:
+  parameters:
+  - name: driverId
+    in: path
+    required: true
+    description: Driver identifier.
+    schema:
+      type: string
+  post:
+    tags:
+    - Drivers
+    - Locations
+    summary: Update driver location
+    description: Stores driver location to support nearby-driver matching and ETA estimation.
+    operationId: updateDriverLocation
+    x-srs-trace:
+    - FR07
+    - BR08
+    requestBody:
+      required: true
+      description: Payload for LocationUpdateRequest.
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas.yaml#/LocationUpdateRequest
+    responses:
+      '201':
+        description: Location recorded.
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/Location
+      '400':
+        $ref: ../components/responses.yaml#/BadRequest
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+driverLatestLocation:
+  parameters:
+  - name: driverId
+    in: path
+    required: true
+    description: Driver identifier.
+    schema:
+      type: string
+  get:
+    tags:
+    - Drivers
+    - Locations
+    summary: Get driver's latest location
+    operationId: getDriverLatestLocation
+    x-srs-trace:
+    - FR07
+    responses:
+      '200':
+        description: Latest known driver location.
+        content:
+          application/json:
+            schema:
+              $ref: ../components/schemas.yaml#/Location
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
+      '404':
+        $ref: ../components/responses.yaml#/NotFound
+driverBookingOffers:
+  parameters:
+  - name: driverId
+    in: path
+    required: true
+    description: Driver identifier.
+    schema:
+      type: string
+  get:
+    tags:
+    - Drivers
+    - Driver Matching
+    summary: Get trip requests offered to a driver
+    description: Represents the SRS requirement for drivers to receive suitable trip requests.
+    operationId: getDriverBookingOffers
+    x-srs-trace:
+    - FR03
+    - UC03
+    responses:
+      '200':
+        description: Pending or recent booking offers.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: ../components/schemas.yaml#/BookingOffer
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
+      '404':
+        $ref: ../components/responses.yaml#/NotFound

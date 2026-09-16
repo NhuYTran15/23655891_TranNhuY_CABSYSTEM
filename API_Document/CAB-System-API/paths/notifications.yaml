@@ -1,0 +1,23 @@
+notifications:
+  get:
+    tags:
+    - Notifications
+    summary: Get notifications for the authenticated user
+    description: Covers booking accepted, driver assigned/arrived, trip completion, payment result, and driver trip-request
+      notifications.
+    operationId: getNotifications
+    x-srs-trace:
+    - FR06
+    - FR14
+    - AC12
+    responses:
+      '200':
+        description: Notifications.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: ../components/schemas.yaml#/Notification
+      '401':
+        $ref: ../components/responses.yaml#/Unauthenticated
